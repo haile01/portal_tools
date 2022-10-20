@@ -1,6 +1,10 @@
 ## DKHP_looter
 As the name suggests, this helps looting as much courses as you can (if u happen to be an APCS student in HCMUS?)
 
+### Disclaimer
+This script assumes that you're registering courses on porta.. *cough cough.
+And also it's not likely that the format of cookies or body format will change, but if it does, gimme an issue plz
+
 ### How to use
 - Run `pip install -r requirements.txt`, or just make sure that `requests` library is installed
 - Cookies: Use a cookie viewer extension to copy or
