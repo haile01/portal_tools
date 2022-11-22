@@ -213,28 +213,37 @@ def get_score():
   }
   r = requests.post(f'{host}/sinh-vien/ket-qua-hoc-tap', files=data, headers=get_headers())
 
-  res = json.loads(r.text)
-  if res['Status'] == 'FAILED':
-    print(f'Ooops, error occured: {res["Message"]}')
-    return
+  try:
+    res = json.loads(r.text)
 
-  res = res['Results']
-  # student info
-  print(f'[+] {get_title(res["DiemTBData"]["DiemTB"])} {res["SinhVienInfo"][1]["Value"]}') # name
-  print(f'[+] Total credits: {res["SinhVienInfo"][8]["Value"]}')
-  print(f'  [+] Mandatory: {res["SinhVienInfo"][2]["Value"]}')
-  print(f'  [+] Optional: {res["SinhVienInfo"][3]["Value"]}')
-  print(f'  [+] Graduation (thesis, capstone, wutev): {res["SinhVienInfo"][4]["Value"]}')
-  print(f'[+] Total grade: {strip_html_tag(res["SinhVienInfo"][9]["Value"])}')
-  print('-' * 10)
+    if res['Status'] == 'FAILED':
+      print(f'Ooops, error occured: {res["Message"]}')
+      return
 
-  # Subjects by group
-  for group in res["NhomHocPhan"]:
-    print(f'=== Subject group: {group["TenNhomHP"]} ===')
-    for sub in group["KetQuaHocPhan"]:
-      print(f'[+] {sub["MaMH"]} - {sub["TenMH"]} ({str(sub["SoTinChi"])}): {str(sub["Diem"])}')
+    res = res['Results']
+    # student info
+    print(f'[+] {get_title(res["DiemTBData"]["DiemTB"])} {res["SinhVienInfo"][1]["Value"]}') # name
+    print(f'[+] Total credits: {res["SinhVienInfo"][8]["Value"]}')
+    print(f'  [+] Mandatory: {res["SinhVienInfo"][2]["Value"]}')
+    print(f'  [+] Optional: {res["SinhVienInfo"][3]["Value"]}')
+    print(f'  [+] Graduation (thesis, capstone, wutev): {res["SinhVienInfo"][4]["Value"]}')
+    print(f'[+] Total grade: {strip_html_tag(res["SinhVienInfo"][9]["Value"])}')
+    print('-' * 10)
 
-    print('')
+    # Subjects by group
+    for group in res["NhomHocPhan"]:
+      print(f'=== Subject group: {group["TenNhomHP"]} ===')
+      for sub in group["KetQuaHocPhan"]:
+        print(f'[+] {sub["MaMH"]} - {sub["TenMH"]} ({str(sub["SoTinChi"])}): {str(sub["Diem"])}')
+
+      print('')
+  except:
+    if "<html" in r.text:
+      print("Seems like cookie is outdated, please update...")
+    else:
+      print("Unknown error, please try again...")
+
+
 
 ####################
 #       Main       #
