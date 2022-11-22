@@ -2,6 +2,8 @@ import requests
 import os
 import json
 import time
+import sys
+import re
 
 host = "https://portal.ctdb.hcmus.edu.vn"
 cookie = ""
@@ -11,12 +13,29 @@ class_prefix = ""
 s = requests.Session()
 s.get(host)
 
+####################
+#      Utils       #
+####################
+
 def get_headers():
   return {
     "Cookie": cookie,
     "X-Official-Request": "TRUE",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.5195.102 Safari/537.36",
   }
+
+def init():
+  global cookie
+
+  if not os.path.exists("cookie.txt"):
+    print("File cookie.txt not found. Please try again...")
+    return False
+
+  cookie = open("cookie.txt", "r").read().strip()
+
+####################
+#    loot_dkhp     #
+####################
 
 def get_courses(student_info):
   data = {
@@ -147,13 +166,8 @@ def poll_status():
       
       return False
 
-def init():
+def dkhp_input():
   global cookie, student_id, class_prefix
-  if not os.path.exists("cookie.txt"):
-    print("File cookie.txt not found. Please try again...")
-    return False
-
-  cookie = open("cookie.txt", "r").read()
 
   while True:
     print("Please input your student ID")
@@ -169,24 +183,101 @@ def init():
 
   return True
 
+####################
+#      score       #
+####################
+
+def strip_html_tag(s):
+  return re.sub('</?.+?>', '', s)
+
+def get_title(score):
+  score = float(score)
+  return "Failure sh!t:" if score < 9 else "Name:"
+
+def score_input():
+  global student_id
+
+  while True:
+    print("Please input your student ID")
+    student_id = input()
+
+    if student_id == "":
+      print("Empty, please try again...")
+    else:
+      break
+
+def get_score():
+  data = {
+    "action": (None, 'loadKetQuaHocTap'),
+    "data": (None, student_id)
+  }
+  r = requests.post(f'{host}/sinh-vien/ket-qua-hoc-tap', files=data, headers=get_headers())
+
+  res = json.loads(r.text)
+  if res['Status'] == 'FAILED':
+    print(f'Ooops, error occured: {res["Message"]}')
+    return
+
+  res = res['Results']
+  # student info
+  print(f'[+] {get_title(res["DiemTBData"]["DiemTB"])} {res["SinhVienInfo"][1]["Value"]}') # name
+  print(f'[+] Total credits: {res["SinhVienInfo"][8]["Value"]}')
+  print(f'  [+] Mandatory: {res["SinhVienInfo"][2]["Value"]}')
+  print(f'  [+] Optional: {res["SinhVienInfo"][3]["Value"]}')
+  print(f'  [+] Graduation (thesis, capstone, wutev): {res["SinhVienInfo"][4]["Value"]}')
+  print(f'[+] Total grade: {strip_html_tag(res["SinhVienInfo"][9]["Value"])}')
+  print('-' * 10)
+
+  # Subjects by group
+  for group in res["NhomHocPhan"]:
+    print(f'=== Subject group: {group["TenNhomHP"]} ===')
+    for sub in group["KetQuaHocPhan"]:
+      print(f'[+] {sub["MaMH"]} - {sub["TenMH"]} ({str(sub["SoTinChi"])}): {str(sub["Diem"])}')
+
+    print('')
+
+####################
+#       Main       #
+####################
+
 def main():
-  if init():
-    print("Start polling for status...")
-    if poll_status():
-      print("Nice, let's fcking goooo")
-      loot()
+  if (len(sys.argv) == 1):
+    print("""
+    Ahem...
+    I said...
+    READ THE MOTHERF*CKING DOCS
+    <3
+    """)
+    exit()
+
+  init()
+
+  if sys.argv[1] == 'dkhp':
+    if dkhp_input():
+      print("Start polling for status...")
+      if poll_status():
+        print("Nice, let's fcking goooo")
+        loot()
+
+  elif sys.argv[1] == 'score':
+    score_input()
+    print("Nice, let's fcking gooooooooo")
+    get_score()
+
+  else:
+    print('Errm, either the dev is too lazy for new feature or u just mistyped...')
 
 def banner():
   print("""
- _____  __  __ _______ ______   __               __
-|     \|  |/  |   |   |   __ \ |  |.-----.-----.|  |_.-----.----.
-|  --  |     <|       |    __/ |  ||  _  |  _  ||   _|  -__|   _|
-|_____/|__|\__|___|___|___|____|__||_____|_____||____|_____|__|
-                         |______| by some weeb
-  
+ ______              __          __      __                __
+|   __ \.-----.----.|  |_.---.-.|  |    |  |_.-----.-----.|  |.-----.
+|    __/|  _  |   _||   _|  _  ||  |    |   _|  _  |  _  ||  ||__ --|
+|___|   |_____|__|  |____|___._||__|____|____|_____|_____||__||_____|
+                                  |______| by some weeb
   Open README.md for how-to-use
   """)
 
 if __name__ == "__main__":
   banner()
+  init()
   main()
