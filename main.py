@@ -170,7 +170,7 @@ def dkhp_input():
   global cookie, student_id, class_prefix
 
   while True:
-    print("Please input your student ID")
+    print("Please input \"your\" student ID")
     student_id = input()
 
     if student_id == "":
