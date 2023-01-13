@@ -4,15 +4,13 @@ import json
 import time
 import sys
 import re
+import random
 
 host = "https://portal.ctdb.hcmus.edu.vn"
 cookie = ""
 student_id = ""
 class_prefix = ""
 nocheck = False
-
-s = requests.Session()
-s.get(host)
 
 ####################
 #      Utils       #
@@ -22,7 +20,7 @@ def get_headers():
   return {
     "Cookie": cookie,
     "X-Official-Request": "TRUE",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.5195.102 Safari/537.36",
+    "User-Agent": f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.{str(random.random())} Safari/537.36",
   }
 
 def init():
@@ -33,6 +31,9 @@ def init():
     return False
 
   cookie = open("cookie.txt", "r").read().strip()
+
+s = requests.Session()
+# s.get(host, headers=get_headers())
 
 ####################
 #    loot_dkhp     #
