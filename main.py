@@ -5,6 +5,8 @@ import time
 import sys
 import re
 import random
+# from tqdm import tqdm
+from rich.progress import track
 
 host = "https://portal.ctdb.hcmus.edu.vn"
 cookie = ""
@@ -168,10 +170,12 @@ def poll_status():
           return True
         else:
           print("Sth went wrong with the portal, no avail courses, trying again...")
-          time.sleep(10)
+          for i in track(range(10), description="Waiting..."):
+            time.sleep(1)
       else:
         print("Not yet...")
-        time.sleep(10)
+        for i in track(range(10), description="Waiting..."):
+          time.sleep(1)
     except:
       if "<html>" in res_time.text:
         print("Seems like cookie is outdated, please update...")
