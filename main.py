@@ -9,6 +9,7 @@ host = "https://portal.ctdb.hcmus.edu.vn"
 cookie = ""
 student_id = ""
 class_prefix = ""
+nocheck = False
 
 s = requests.Session()
 s.get(host)
@@ -132,8 +133,9 @@ def loot():
   for course in chosen_courses:
     print(f"{course['TenTA']} - {course['SoTinChi']} credits")
 
-  print("Enter to loot...")
-  input()
+  if not no_check:
+    print("Enter to loot...")
+    input()
   
   print("Proceeding...")
 
@@ -144,22 +146,33 @@ def loot():
   print("Done! Enjoy ;)")
 
 def poll_status():
-  data = {
+  data_time = {
     "action": (None, "checkThoiGianDangKy"),
     "data": (None, "")
   }
+  data_courses = {
+    "action": (None, "loadDangKyHocPhan"),
+    "data": (None, student_id)
+  }
+
 
   while True:
-    r = s.post(f"{host}/dang-ky-hoc-phan/sinh-vien-apcs", files=data, headers=get_headers())
+    r_time = s.post(f"{host}/dang-ky-hoc-phan/sinh-vien-apcs", files=data_time, headers=get_headers())
+    r_courses = s.post(f"{host}/dang-ky-hoc-phan/sinh-vien-apcs", files=data_courses, headers=get_headers())
     try:
-      res = json.loads(r.text)
-      if res["Results"]["Message"] == "":
-        return True
+      res_time = json.loads(r_time.text)
+      res_courses = json.loads(r_courses.text)
+      if res_time["Results"]["Message"] == "":
+        if len(res_courses["Results"]["ListChuaDangKy"]) > 0:
+          return True
+        else:
+          print("Sth went wrong with the portal, no avail courses, trying again...")
+          time.sleep(10)
       else:
         print("Not yet...")
         time.sleep(10)
     except:
-      if "<html>" in r.text:
+      if "<html>" in res_time.text:
         print("Seems like cookie is outdated, please update...")
       else:
         print("Unknown error, please try again...")
@@ -167,7 +180,10 @@ def poll_status():
       return False
 
 def dkhp_input():
-  global cookie, student_id, class_prefix
+  global cookie, student_id, class_prefix, no_check
+
+  if len(sys.argv) > 2:
+    no_check = True if sys.argv[2] == 'nocheck' else False
 
   while True:
     print("Please input \"your\" student ID")
